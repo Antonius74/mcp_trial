@@ -88,6 +88,7 @@ Nota importante:
 
 - Il client avvia il server MCP come processo figlio via stdio.
 - `MCP_SERVER_COMMAND` deve puntare a un python valido nell'ambiente corrente.
+- `API_BASE_URL` deve puntare esattamente alla stessa porta dove gira `app.main:app`.
 
 ## 5) Setup rapido
 
@@ -155,6 +156,12 @@ source .venv/bin/activate
 python -m mcp_server.server
 ```
 
+Importante:
+
+- il comando corretto del modulo e `mcp_server.server` (non `mcp_sever.server`);
+- il server MCP su stdio non stampa banner HTTP e puo sembrare "fermo": e normale;
+- resta in attesa su stdin/stdout finche non lo usa un client MCP.
+
 ### 7.3 Avvia MCP client con Ollama
 
 Una richiesta singola:
@@ -169,6 +176,38 @@ Modalita interattiva:
 ```bash
 source .venv/bin/activate
 python -m mcp_client.client
+```
+
+### 7.4 Preflight check (consigliato)
+
+Prima di lanciare il client, verifica che la API mock risponda davvero sull'URL configurato:
+
+```bash
+echo "$API_BASE_URL"
+curl -i "$API_BASE_URL/health"
+curl -i "$API_BASE_URL/customers"
+```
+
+Devi vedere:
+
+- `200 OK` su `/health`
+- body `{"status":"ok"}`.
+
+Se vedi `404 Not Found`, quasi sempre stai colpendo un altro servizio sulla stessa porta.
+In quel caso usa una porta diversa (es. `8010`) e allinea sia API che `API_BASE_URL`:
+
+```bash
+source .venv/bin/activate
+export API_BASE_URL=http://127.0.0.1:8010
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8010
+```
+
+In un secondo terminale:
+
+```bash
+source .venv/bin/activate
+export API_BASE_URL=http://127.0.0.1:8010
+python -m mcp_client.client "Mostrami clienti e ordini"
 ```
 
 ## 8) Come funziona il colloquio MCP client-server-API (dettaglio)
@@ -504,10 +543,21 @@ curl -X POST http://127.0.0.1:8000/orders \
 
 - porta `8000` occupata, cambia `API_PORT` o ferma il processo in conflitto.
 
+Il client risponde con `404 Not Found`:
+
+- `API_BASE_URL` punta a un servizio sbagliato (tipico: altra app su `:8000`);
+- verifica con `curl "$API_BASE_URL/health"`;
+- sposta API e client su `8010` (vedi sezione 7.4) e riprova.
+
 Errore MCP su avvio server:
 
 - controlla `MCP_SERVER_COMMAND` in `.env`;
 - in questo progetto il default consigliato e `.venv/bin/python`.
+
+Sembra che `python -m mcp_server.server` "non parta":
+
+- e atteso: server MCP su stdio non mostra output web/HTTP;
+- lascia il processo in esecuzione o usa direttamente `mcp_client.client`, che lo avvia da solo.
 
 Ollama non risponde:
 
