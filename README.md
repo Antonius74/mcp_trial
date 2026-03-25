@@ -80,7 +80,7 @@ Valori principali:
 - `POSTGRES_DB=misc_svc`
 - `API_BASE_URL=http://127.0.0.1:8000`
 - `OLLAMA_URL=http://127.0.0.1:11434`
-- `OLLAMA_MODEL=llama3.1`
+- `OLLAMA_MODEL=gpt-oss:120b-cloud`
 - `MCP_SERVER_COMMAND=.venv/bin/python`
 - `MCP_SERVER_ARGS=-m mcp_server.server`
 
@@ -300,7 +300,7 @@ Chiamata a Ollama con tool disponibili (client -> `POST /api/chat`):
 
 ```json
 {
-  "model": "llama3.1",
+  "model": "gpt-oss:120b-cloud",
   "messages": [
     {"role": "system", "content": "Sei un assistente..."},
     {"role": "user", "content": "Mostrami i clienti"}
@@ -512,7 +512,7 @@ Errore MCP su avvio server:
 Ollama non risponde:
 
 - verifica `ollama serve` attivo;
-- verifica modello disponibile (`OLLAMA_MODEL`, esempio `llama3.1`).
+- verifica modello disponibile (`OLLAMA_MODEL`, esempio `gpt-oss:120b-cloud`).
 
 ## 12) Perche questa architettura e utile
 
